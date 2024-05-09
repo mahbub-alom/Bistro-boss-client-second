@@ -2,10 +2,37 @@ import React from "react";
 import SectionTitles from "../../../components/SectionTitles";
 import useMenu from "../../../hooks/useMenu";
 import { FaEdit, FaRegTrashAlt } from "react-icons/fa";
+import Swal from "sweetalert2";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { Link } from "react-router-dom";
 
 const ManageItems = () => {
-  const [menu] = useMenu();
-  const handleDeleteItem = (item) => {};
+  const [menu, , refetch] = useMenu();
+  const axiosSecure = useAxiosSecure();
+  const handleDeleteItem = (item) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axiosSecure.delete(`/menu/${item._id}`).then((res) => {
+          if (res.data.deletedCount > 0) {
+            refetch();
+            Swal.fire({
+              title: "Deleted!",
+              text: `${item.name} has been deleted`,
+              icon: "success",
+            });
+          }
+        });
+      }
+    });
+  };
   return (
     <div>
       <SectionTitles
@@ -45,9 +72,11 @@ const ManageItems = () => {
                   <td>{item.name}</td>
                   <td>${item.price}</td>
                   <th>
-                    <button className="btn btn-outline btn-success">
-                      <FaEdit />
-                    </button>
+                    <Link to={`/dashboard/updateItems/${item._id}`}>
+                      <button className="btn btn-outline btn-success">
+                        <FaEdit />
+                      </button>
+                    </Link>
                   </th>
                   <th>
                     <button
