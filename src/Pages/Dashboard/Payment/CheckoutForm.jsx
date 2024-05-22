@@ -4,6 +4,7 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useCart from "../../../hooks/useCart";
 import useAuth from "../../../hooks/useAuth";
 import moment from "moment";
+import Swal from "sweetalert2";
 
 const CheckoutForm = () => {
   const [error, setError] = useState("");
@@ -80,7 +81,15 @@ const CheckoutForm = () => {
           status: "pending",
         };
         const res = await axiosSecure.post("/payment", payment);
-        console.log(res.data);
+        if (res.data.paymentResult.insertedId) {
+          Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: "Your Payment Successfully",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        }
       }
     }
   };
