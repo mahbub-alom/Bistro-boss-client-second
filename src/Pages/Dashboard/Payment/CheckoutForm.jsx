@@ -3,6 +3,7 @@ import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useCart from "../../../hooks/useCart";
 import useAuth from "../../../hooks/useAuth";
+import moment from "moment";
 
 const CheckoutForm = () => {
   const [error, setError] = useState("");
@@ -16,12 +17,14 @@ const CheckoutForm = () => {
   const totalAmount = cart.reduce((total, item) => total + item.price, 0);
 
   useEffect(() => {
-    axiosSecure
-      .post("/create-payment-intent", { price: totalAmount })
-      .then((res) => {
-        setClientSecret(res.data.clientSecret);
-        // console.log(res.data.clientSecret);
-      });
+    if (totalAmount > 0) {
+      axiosSecure
+        .post("/create-payment-intent", { price: totalAmount })
+        .then((res) => {
+          setClientSecret(res.data.clientSecret);
+          // console.log(res.data.clientSecret);
+        });
+    }
   }, [axiosSecure, totalAmount]);
 
   const handleSubmit = async (e) => {
@@ -66,6 +69,18 @@ const CheckoutForm = () => {
       console.log("confirm intent", paymentIntent);
       if (paymentIntent.status === "succeeded") {
         setTransactionId(paymentIntent.id);
+        const payment = {
+          name: users.displayName,
+          email: users.email,
+          price: totalAmount,
+          transactionId: paymentIntent.id,
+          data: moment().format("MMMM Do YYYY, h:mm:ss a"),
+          cartIds: cart.map((item) => item._id),
+          menuIds: cart.map((item) => item.menuId),
+          status: "pending",
+        };
+        const res = await axiosSecure.post("/payment", payment);
+        console.log(res.data);
       }
     }
   };
