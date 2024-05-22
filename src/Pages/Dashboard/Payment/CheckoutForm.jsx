@@ -5,11 +5,13 @@ import useCart from "../../../hooks/useCart";
 import useAuth from "../../../hooks/useAuth";
 import moment from "moment";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const CheckoutForm = () => {
   const [error, setError] = useState("");
   const [transactionId, setTransactionId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
+  const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
   const { users } = useAuth();
   const stripe = useStripe();
@@ -75,20 +77,21 @@ const CheckoutForm = () => {
           email: users.email,
           price: totalAmount,
           transactionId: paymentIntent.id,
-          data: moment().format("MMMM Do YYYY, h:mm:ss a"),
+          date: moment().format("MMMM Do YYYY, h:mm:ss a"),
           cartIds: cart.map((item) => item._id),
           menuIds: cart.map((item) => item.menuId),
           status: "pending",
         };
         const res = await axiosSecure.post("/payment", payment);
-        if (res.data.paymentResult.insertedId) {
+        if (res.data?.paymentResult?.insertedId) {
           Swal.fire({
-            position: "top-end",
+            position: "center",
             icon: "success",
             title: "Your Payment Successfully",
             showConfirmButton: false,
             timer: 1500,
           });
+          navigate("/dashboard/paymentHistory");
         }
       }
     }
